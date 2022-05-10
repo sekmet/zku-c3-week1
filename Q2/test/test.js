@@ -2,18 +2,6 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const fs = require("fs");
 const { groth16, plonk } = require("snarkjs");
-const wc = require('../contracts/circuits/Multiplier3_plonk/Multiplier3_plonk_js/witness_calculator.js')
-const wasm = 'contracts/circuits/Multiplier3_plonk/Multiplier3_plonk_js/Multiplier3_plonk.wasm'
-const zkey = 'contracts/circuits/Multiplier3_plonk/circuit_final.zkey'
-const INPUTS_FILE = '/tmp/inputs'
-const WITNESS_FILE = '/tmp/witness'
-
-const generateWitness = async (inputs) => {
-  const buffer = fs.readFileSync(wasm);
-  const witnessCalculator = await wc(buffer)
-  const buff = await witnessCalculator.calculateWTNSBin(inputs, 0);
-  fs.writeFileSync(WITNESS_FILE, buff)
-}
 
 function unstringifyBigInts(o) {
     if ((typeof(o) == "string") && (/^[0-9]+$/.test(o) ))  {
@@ -131,11 +119,7 @@ describe("Multiplier3 with PLONK", function () {
     it("Should return true for correct proof", async function () {
         //[assignment] insert your script here
         //[assignment] insert your script here
-        const inputSignals = {"a":"139","b":"6","c":"9"}
-        await generateWitness(inputSignals)
-        const { proof, publicSignals } = await plonk.prove(zkey, WITNESS_FILE);
-
-        //const { proof, publicSignals } = await plonk.fullProve({"a":"139","b":"6","c":"9"}, "contracts/circuits/Multiplier3_plonk/Multiplier3_plonk_js/Multiplier3_plonk.wasm","contracts/circuits/Multiplier3_plonk/circuit_final.zkey");
+        const { proof, publicSignals } = await plonk.prove("contracts/circuits/Multiplier3_plonk/circuit_final.zkey","contracts/circuits/Multiplier3_plonk/witness.wtns");
 
         console.log('139x6x9 =',publicSignals[0]);
 
@@ -143,14 +127,10 @@ describe("Multiplier3 with PLONK", function () {
         const editedProof = unstringifyBigInts(proof);
         const calldata = await plonk.exportSolidityCallData(editedProof, editedPublicSignals);
     
-        const argv = calldata.replace(/["[\]\s]/g, "").split(',').map(x => BigInt(x).toString());
-    
-        const a3p = [argv[0], argv[1]];
-        const b3p = [[argv[2], argv[3]], [argv[4], argv[5]]];
-        const c3p = [argv[6], argv[7]];
-        const Input3p = argv.slice(8);
+        const a3public = [calldata.replace(/["[\]\s]/g, "").split(',').map(x => BigInt(x).toString())[1]];
+        const a3proof = calldata.split(',')[0];
 
-        expect(await verifier3p.verifyProof(argv[0], Input3p)).to.be.true;
+        expect(await verifier3p.verifyProof(a3proof, a3public)).to.be.true;
 
     });
     it("Should return false for invalid proof", async function () {
@@ -159,6 +139,6 @@ describe("Multiplier3 with PLONK", function () {
         let b3p = [[0, 0], [0, 0]];
         let c3p = [0, 0];
         let d3p = [0]
-        expect(await verifier3p.verifyProof(a3p, b3p, c3p, d3p)).to.be.false;
+        expect(await verifier3p.verifyProof(a3p, c3p,)).to.be.false;
     });
 });
