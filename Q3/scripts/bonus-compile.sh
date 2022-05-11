@@ -2,6 +2,8 @@
 
 cd contracts/bonus
 
+rm -fr SystemOfEquations
+
 mkdir SystemOfEquations
 
 if [ -f ./powersOfTau28_hez_final_10.ptau ]; then
@@ -21,10 +23,18 @@ snarkjs r1cs info SystemOfEquations/SystemOfEquations.r1cs
 # Start a new zkey and make a contribution
 
 snarkjs groth16 setup SystemOfEquations/SystemOfEquations.r1cs powersOfTau28_hez_final_10.ptau SystemOfEquations/circuit_0000.zkey
-snarkjs zkey contribute SystemOfEquations/circuit_0000.zkey SystemOfEquations/circuit_final.zkey --name="1st Contributor Name" -v -e="random text"
+snarkjs zkey contribute SystemOfEquations/circuit_0000.zkey SystemOfEquations/circuit_final.zkey --name="1st Carlos Guimaraes" -v -e="zkp rocks!"
 snarkjs zkey export verificationkey SystemOfEquations/circuit_final.zkey SystemOfEquations/verification_key.json
 
 # generate solidity contract
 snarkjs zkey export solidityverifier SystemOfEquations/circuit_final.zkey ../SystemOfEquationsVerifier.sol
+
+cd ../..
+
+node scripts/bonus-bump-solidity.js
+
+cd contracts/bonus
+
+echo '{"equations": [["1", "1", "1"], ["1", "2", "3"], ["2", "-1", "1"] ] }' > SystemOfEquations/input.json
 
 cd ../..
