@@ -2,6 +2,8 @@
 
 cd contracts/circuits
 
+rm -fr RangeProof_plonk
+
 mkdir RangeProof_plonk
 
 if [ -f ./powersOfTau28_hez_final_10.ptau ]; then
@@ -26,8 +28,10 @@ snarkjs zkey export verificationkey RangeProof_plonk/circuit_final.zkey RangePro
 # generate solidity contract
 snarkjs zkey export solidityverifier RangeProof_plonk/circuit_final.zkey ../RangeProofVerifierPlonk.sol
 
+node ../../scripts/bonus-bump-solidity.js
+
 # computing the witness
-echo '{"in":"2", "range":["3","9"]}' > RangeProof_plonk/input.json
+echo '{"in":"8", "range":["0","9"]}' > RangeProof_plonk/input.json
 node RangeProof_plonk/RangeProof_js/generate_witness.js RangeProof_plonk/RangeProof_js/RangeProof.wasm RangeProof_plonk/input.json RangeProof_plonk/witness.wtns
 
 # prove the circuit

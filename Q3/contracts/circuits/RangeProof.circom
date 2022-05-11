@@ -20,6 +20,7 @@ template RangeProof(n) {
 
     component low = LessEqThan(n);
     component high = GreaterEqThan(n);
+    component check = binaryCheck();
 
     // [assignment] insert your code here
     low.in[0] <== in;
@@ -28,7 +29,10 @@ template RangeProof(n) {
     high.in[0] <== in;
     high.in[1] <== range[1];
 
-    out <-- (low.out + high.out) * 1/2;
+    //out <-- (low.out + high.out) * 1/2;
+    var result = (low.out + high.out) * 1;
+    check.in <== result;
+    out <-- check.out;
 }
 
-component main = RangeProof(32);
+//component main = RangeProof(32);
